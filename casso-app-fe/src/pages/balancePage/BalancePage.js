@@ -16,6 +16,7 @@ import { toast } from "react-toastify";
 import { fetchLinkedBanks } from "../../redux/features/linkedBanks/linkedBanksThunks";
 import { selectBanks } from "../../redux/features/linkedBanks/linkedBanksSelector";
 import { endpoints, publicApis } from "../../configs/apiConfig";
+import BankSelect from "../../components/bankSelect/BankSelect";
 
 const BalancePage = () => {
   const dispatch = useDispatch();
@@ -60,24 +61,12 @@ const BalancePage = () => {
               {loading ? (
                 <Spinner animation="border" />
               ) : (
-                <Form.Select
-                  value={selectedBank?.id || ""}
-                  onChange={(e) => {
-                    const bank = banks.find(
-                      (b) => String(b.id) === e.target.value
-                    );
-                    setSelectedBank(bank || {});
-                  }}
-                >
-                  <option key="default" value="">
-                    -- Chọn ngân hàng --
-                  </option>
-                  {banks.map((bank) => (
-                    <option key={bank.id || bank.title} value={bank.id}>
-                      {bank.title}
-                    </option>
-                  ))}
-                </Form.Select>
+                <BankSelect
+                  banks={banks}
+                  loading={loading}
+                  selectedBank={selectedBank}
+                  setSelectedBank={setSelectedBank}
+                />
               )}
             </Form.Group>
           </Form>

@@ -15,6 +15,7 @@ import { toast } from "react-toastify";
 import { fetchLinkedBanks } from "../../redux/features/linkedBanks/linkedBanksThunks";
 import { selectBanks } from "../../redux/features/linkedBanks/linkedBanksSelector";
 import { endpoints, publicApis } from "../../configs/apiConfig";
+import BankSelect from "../../components/bankSelect/BankSelect";
 
 const TransactionHistoryPage = () => {
   const dispatch = useDispatch();
@@ -52,33 +53,12 @@ const TransactionHistoryPage = () => {
           <h2>Lịch sử giao dịch</h2>
         </Col>
         <Col>
-          <Form>
-            <Form.Group className="mb-3">
-              <Form.Label>Ngân hàng</Form.Label>
-              {loading ? (
-                <Spinner animation="border" />
-              ) : (
-                <Form.Select
-                  value={selectedBank?.id || ""}
-                  onChange={(e) => {
-                    const bank = banks.find(
-                      (b) => String(b.id) === e.target.value
-                    );
-                    setSelectedBank(bank || {});
-                  }}
-                >
-                  <option key="default" value="">
-                    -- Chọn ngân hàng --
-                  </option>
-                  {banks.map((bank) => (
-                    <option key={bank.id || bank.title} value={bank.id}>
-                      {bank.title}
-                    </option>
-                  ))}
-                </Form.Select>
-              )}
-            </Form.Group>
-          </Form>
+          <BankSelect
+            banks={banks}
+            loading={loading}
+            selectedBank={selectedBank}
+            setSelectedBank={setSelectedBank}
+          />
         </Col>
         <Col className="d-flex align-items-end">
           <Button

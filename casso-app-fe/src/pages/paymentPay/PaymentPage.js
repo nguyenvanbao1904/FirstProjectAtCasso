@@ -15,6 +15,7 @@ import Spinner from "react-bootstrap/Spinner";
 import Alert from "react-bootstrap/Alert";
 import { QRCodeCanvas } from "qrcode.react";
 import { toast } from "react-toastify";
+import BankSelect from "../../components/bankSelect/BankSelect";
 
 const PaymentPage = () => {
   const dispatch = useDispatch();
@@ -117,28 +118,12 @@ const PaymentPage = () => {
             {error && <Alert variant="danger">{error}</Alert>}
 
             <Form>
-              <Form.Group className="mb-3">
-                <Form.Label>Kênh thanh toán</Form.Label>
-                {loading ? (
-                  <Spinner animation="border" />
-                ) : (
-                  <Form.Select
-                    value={selectedBank?.id || ""}
-                    onChange={(e) =>
-                      setSelectedBank(
-                        banks.find((b) => b.id === e.target.value) || null
-                      )
-                    }
-                  >
-                    <option value="">-- Chọn ngân hàng --</option>
-                    {banks.map((bank) => (
-                      <option key={bank.id} value={bank.id}>
-                        {bank.title}
-                      </option>
-                    ))}
-                  </Form.Select>
-                )}
-              </Form.Group>
+              <BankSelect
+                banks={banks}
+                loading={loading}
+                selectedBank={selectedBank}
+                setSelectedBank={setSelectedBank}
+              />
 
               <Form.Group className="mb-3">
                 <Form.Label>Số tiền</Form.Label>
