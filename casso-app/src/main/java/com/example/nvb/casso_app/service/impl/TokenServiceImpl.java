@@ -1,0 +1,107 @@
+package com.example.nvb.casso_app.service.impl;
+
+import com.example.nvb.casso_app.dto.request.ExchangeTokenRequest;
+import com.example.nvb.casso_app.dto.request.GrantTokenRequest;
+import com.example.nvb.casso_app.dto.response.ExchangeTokenResponse;
+import com.example.nvb.casso_app.dto.response.GrantTokenResponse;
+import com.example.nvb.casso_app.entity.Token;
+import com.example.nvb.casso_app.mapper.TokenMapper;
+import com.example.nvb.casso_app.repository.TokenRepository;
+import com.example.nvb.casso_app.service.CallApiService;
+import com.example.nvb.casso_app.service.FiServiceService;
+import com.example.nvb.casso_app.service.TokenService;
+import jakarta.transaction.Transactional;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
+import org.jasypt.encryption.StringEncryptor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpMethod;
+import org.springframework.stereotype.Service;
+
+import java.util.HashMap;
+import java.util.Map;
+
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@RequiredArgsConstructor
+@Service
+public class TokenServiceImpl implements TokenService {
+    CallApiService callApiService;
+    TokenRepository tokenRepository;
+    TokenMapper tokenMapper;
+    StringEncryptor stringEncryptor;
+    FiServiceService fiServiceService;
+
+    @NonFinal
+    @Value("${casso-key.client-id}")
+    private String CASSO_CLIENT_ID;
+
+    @NonFinal
+    @Value("${casso-key.secret-key}")
+    private String CASSO_SECRET_KEY;
+
+    @Override
+    public GrantTokenResponse getGrantToken(GrantTokenRequest request) {
+        Map<String, String> headers = new HashMap<>();
+        headers.put("x-client-id", CASSO_CLIENT_ID);
+        headers.put("x-secret-key", CASSO_SECRET_KEY);
+
+        return callApiService.callApi("https://sandbox.bankhub.dev/grant/token",
+                HttpMethod.POST,
+                headers,
+                request,
+                GrantTokenResponse.class);
+    }
+
+    @Override
+    public ExchangeTokenResponse exchangeToken(ExchangeTokenRequest request) {
+        Map<String, String> headers = new HashMap<>();
+        headers.put("x-client-id", CASSO_CLIENT_ID);
+        headers.put("x-secret-key", CASSO_SECRET_KEY);
+
+        ExchangeTokenResponse rs = callApiService.callApi("https://sandbox.bankhub.dev/grant/exchange",
+                HttpMethod.POST,
+                headers,
+                request,
+                ExchangeTokenResponse.class);
+        rs.setFiService(fiServiceService.getFiService(request.getFiServiceId()));
+        return saveToken(rs);
+    }
+
+    @Override
+    public ExchangeTokenResponse saveToken(ExchangeTokenResponse response) {
+        Token token = tokenMapper.toEntity(response);
+        token.setAccessToken(stringEncryptor.encrypt(token.getAccessToken()));
+        return tokenMapper.toExchangeTokenResponse(tokenRepository.save(token));
+    }
+
+    @Override
+    public String getAccessToken(String id) {
+        return tokenRepository.findByFiService_Id(id)
+                .map(token -> stringEncryptor.decrypt(token.getAccessToken()))
+                .orElse(null);
+    }
+
+    @Override
+    @Transactional
+    public void deleteAccessToken(String id) {
+        String accessToken = getAccessToken(id);
+        Map<String, String> headers = new HashMap<>();
+        headers.put("x-client-id", CASSO_CLIENT_ID);
+        headers.put("x-secret-key", CASSO_SECRET_KEY);
+        headers.put("Authorization", accessToken);
+        Map<String, String> body = new HashMap<>();
+        body.put("redirectUri", "http://localhost:3000/success");
+
+        callApiService.callApi(
+                "https://sandbox.bankhub.dev/grant/remove",
+                HttpMethod.POST,
+                headers,
+                body,
+                Object.class
+        );
+        tokenRepository.deleteByFiService_Id(id);
+    }
+
+}

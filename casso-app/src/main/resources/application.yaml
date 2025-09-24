@@ -1,0 +1,22 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /casso-app
+
+spring:
+  datasource:
+    url: "jdbc:mysql://localhost:3307/casso_app"
+    driverClassName: "com.mysql.cj.jdbc.Driver"
+    username: root
+    password: ${CASSO_DATABASE_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+casso-key:
+  client-id: ${CASSO_CLIENT_ID}
+  secret-key: ${CASSO_SECRET_KEY}
+
+token:
+  JASYPT_SECRET: ${JASYPT_SECRET}
