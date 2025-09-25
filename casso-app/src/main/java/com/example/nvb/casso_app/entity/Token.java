@@ -16,6 +16,8 @@ public class Token {
     String id;
     @Column(unique = true)
     String accessToken;
+    @Column(unique = true)
+    String grantToken;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "fiservice_id")

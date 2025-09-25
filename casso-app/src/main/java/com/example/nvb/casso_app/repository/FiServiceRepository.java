@@ -15,6 +15,6 @@ public interface FiServiceRepository extends JpaRepository<FiService,String> {
     @Query("SELECT f FROM FiService f WHERE f.id NOT IN (SELECT t.fiService.id FROM Token t)")
     List<FiService> findAllNotLinked();
 
-    @Query("SELECT f FROM FiService f WHERE f.id IN (SELECT t.fiService.id FROM Token t)")
+    @Query("SELECT f FROM FiService f WHERE f.id IN (SELECT t.fiService.id FROM Token t WHERE t.accessToken IS NOT NULL AND t.accessToken <> '')")
     List<FiService> findAllLinked();
 }

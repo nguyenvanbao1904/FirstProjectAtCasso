@@ -11,5 +11,6 @@ public interface TokenService {
     ExchangeTokenResponse saveToken(ExchangeTokenResponse response);
     String getAccessToken(String id);
     void deleteAccessToken(String id);
-
+    GrantTokenResponse saveGrantToken(GrantTokenResponse response);
+    GrantTokenResponse getGrantToken(String id);
 }

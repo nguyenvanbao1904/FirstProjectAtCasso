@@ -11,4 +11,5 @@ import lombok.experimental.FieldDefaults;
 public class GrantTokenResponse {
     String grantToken;
     String expiration;
+    FiServiceResponse.FiServiceItem fiService;
 }

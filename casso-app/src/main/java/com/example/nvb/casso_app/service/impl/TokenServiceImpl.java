@@ -43,15 +43,24 @@ public class TokenServiceImpl implements TokenService {
 
     @Override
     public GrantTokenResponse getGrantToken(GrantTokenRequest request) {
-        Map<String, String> headers = new HashMap<>();
-        headers.put("x-client-id", CASSO_CLIENT_ID);
-        headers.put("x-secret-key", CASSO_SECRET_KEY);
+        GrantTokenResponse grantToken = this.getGrantToken(request.getFiServiceId());
+        if(grantToken == null) {
+            Map<String, String> headers = new HashMap<>();
+            headers.put("x-client-id", CASSO_CLIENT_ID);
+            headers.put("x-secret-key", CASSO_SECRET_KEY);
 
-        return callApiService.callApi("https://sandbox.bankhub.dev/grant/token",
-                HttpMethod.POST,
-                headers,
-                request,
-                GrantTokenResponse.class);
+            GrantTokenResponse token = callApiService.callApi("https://sandbox.bankhub.dev/grant/token",
+                    HttpMethod.POST,
+                    headers,
+                    request,
+                    GrantTokenResponse.class);
+            token.setFiService(fiServiceService.getFiService(request.getFiServiceId()));
+            token = this.saveGrantToken(token);
+            token.setGrantToken(stringEncryptor.decrypt(token.getGrantToken()));
+            return token;
+        }
+        grantToken.setGrantToken(stringEncryptor.decrypt(grantToken.getGrantToken()));
+        return grantToken;
     }
 
     @Override
@@ -71,9 +80,12 @@ public class TokenServiceImpl implements TokenService {
 
     @Override
     public ExchangeTokenResponse saveToken(ExchangeTokenResponse response) {
-        Token token = tokenMapper.toEntity(response);
-        token.setAccessToken(stringEncryptor.encrypt(token.getAccessToken()));
-        return tokenMapper.toExchangeTokenResponse(tokenRepository.save(token));
+        Token token = tokenRepository.findByFiService_Id(response.getFiService().getId()).orElse(null);
+        if(token != null) {
+            token.setAccessToken(stringEncryptor.encrypt(response.getAccessToken()));
+            return tokenMapper.toExchangeTokenResponse(tokenRepository.save(token));
+        }
+        return null;
     }
 
     @Override
@@ -104,4 +116,20 @@ public class TokenServiceImpl implements TokenService {
         tokenRepository.deleteByFiService_Id(id);
     }
 
+    @Override
+    public GrantTokenResponse saveGrantToken(GrantTokenResponse response) {
+        Token token = tokenMapper.toEntity(response);
+        token.setGrantToken(stringEncryptor.encrypt(token.getGrantToken()));
+        return tokenMapper.toGrantTokenResponse(tokenRepository.save(token));
+    }
+
+    @Override
+    public GrantTokenResponse getGrantToken(String id) {
+        Token token = tokenRepository.findByFiService_Id(id).orElse(null);
+        if(token == null) {
+            return null;
+        }
+        token.setGrantToken(stringEncryptor.decrypt(token.getGrantToken()));
+        return tokenMapper.toGrantTokenResponse(token);
+    }
 }
