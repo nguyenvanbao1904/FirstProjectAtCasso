@@ -7,6 +7,7 @@ export const fetchLinkedBanks = createAsyncThunk(
     try {
       const res = await publicApis.get(endpoints.fiService.my_fi_service);
       return res.data.data.fiServices.map((item) => ({
+        code: item.code,
         id: item.id,
         title: item.name,
         description: item.fiFullName,

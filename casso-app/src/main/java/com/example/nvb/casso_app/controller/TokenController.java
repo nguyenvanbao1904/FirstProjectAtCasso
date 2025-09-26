@@ -20,9 +20,18 @@ public class TokenController {
     @PostMapping("/token")
     public ApiResponse<GrantTokenResponse> getGrantToken(@RequestBody GrantTokenRequest grantTokenRequest){
         return ApiResponse.<GrantTokenResponse>builder()
-                .message("Grant token successfully")
+                .message("Get Grant token successfully")
                 .code(200)
                 .data(tokenService.getGrantToken(grantTokenRequest))
+                .build();
+    }
+
+    @PostMapping("/token/update")
+    public ApiResponse<GrantTokenResponse> updateGrantToken(@RequestBody GrantTokenRequest grantTokenRequest){
+        return ApiResponse.<GrantTokenResponse>builder()
+                .message("Update Grant token successfully")
+                .code(200)
+                .data(tokenService.updateGrantToken(grantTokenRequest))
                 .build();
     }
 
@@ -37,7 +46,7 @@ public class TokenController {
 
     @DeleteMapping("/token/{id}")
     public ApiResponse<Void> deleteToken(@PathVariable String id){
-        tokenService.deleteAccessToken(id);
+        tokenService.deleteAccessToken(id, true);
         return ApiResponse.<Void>builder()
                 .code(204)
                 .message("Token deleted successfully")

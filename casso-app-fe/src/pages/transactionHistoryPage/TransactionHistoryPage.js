@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   Container,
@@ -7,7 +7,6 @@ import {
   Card,
   Table,
   Button,
-  Form,
   Spinner,
 } from "react-bootstrap";
 import { toast } from "react-toastify";
@@ -16,6 +15,7 @@ import { fetchLinkedBanks } from "../../redux/features/linkedBanks/linkedBanksTh
 import { selectBanks } from "../../redux/features/linkedBanks/linkedBanksSelector";
 import { endpoints, publicApis } from "../../configs/apiConfig";
 import BankSelect from "../../components/bankSelect/BankSelect";
+import { filterBanksByQrpay } from "../../utils/bankUtils";
 
 const TransactionHistoryPage = () => {
   const dispatch = useDispatch();
@@ -25,6 +25,11 @@ const TransactionHistoryPage = () => {
   const [transactions, setTransactions] = useState([]);
   const [loadingTx, setLoadingTx] = useState(false);
 
+  const filteredBanks = useMemo(
+    () => filterBanksByQrpay(banks, false),
+    [banks]
+  );
+
   useEffect(() => {
     dispatch(fetchLinkedBanks());
   }, [dispatch]);
@@ -33,9 +38,13 @@ const TransactionHistoryPage = () => {
     if (!selectedBank?.id) return;
     try {
       setLoadingTx(true);
-      const res = await publicApis.post(endpoints.transactions, {
-        fiServiceId: selectedBank.id,
-      });
+      const res = await publicApis.post(
+        endpoints.transactions,
+        {
+          fiServiceId: selectedBank.id,
+        },
+        { meta: { fiServiceId: selectedBank.id } }
+      );
       setTransactions(res.data?.data || []);
     } catch (err) {
       console.error("Error load transactions:", err);
@@ -54,7 +63,7 @@ const TransactionHistoryPage = () => {
         </Col>
         <Col>
           <BankSelect
-            banks={banks}
+            banks={filteredBanks}
             loading={loading}
             selectedBank={selectedBank}
             setSelectedBank={setSelectedBank}

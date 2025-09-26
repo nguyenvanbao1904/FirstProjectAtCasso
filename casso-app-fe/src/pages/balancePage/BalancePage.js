@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   Container,
@@ -17,6 +17,7 @@ import { fetchLinkedBanks } from "../../redux/features/linkedBanks/linkedBanksTh
 import { selectBanks } from "../../redux/features/linkedBanks/linkedBanksSelector";
 import { endpoints, publicApis } from "../../configs/apiConfig";
 import BankSelect from "../../components/bankSelect/BankSelect";
+import { filterBanksByQrpay } from "../../utils/bankUtils";
 
 const BalancePage = () => {
   const dispatch = useDispatch();
@@ -25,6 +26,11 @@ const BalancePage = () => {
   const [selectedBank, setSelectedBank] = useState({});
   const [accounts, setAccounts] = useState([]);
   const [loadingTx, setLoadingTx] = useState(false);
+
+  const filteredBanks = useMemo(
+    () => filterBanksByQrpay(banks, false),
+    [banks]
+  );
 
   useEffect(() => {
     dispatch(fetchLinkedBanks());
@@ -57,12 +63,11 @@ const BalancePage = () => {
         <Col>
           <Form>
             <Form.Group className="mb-3">
-              <Form.Label>Ngân hàng</Form.Label>
               {loading ? (
                 <Spinner animation="border" />
               ) : (
                 <BankSelect
-                  banks={banks}
+                  banks={filteredBanks}
                   loading={loading}
                   selectedBank={selectedBank}
                   setSelectedBank={setSelectedBank}

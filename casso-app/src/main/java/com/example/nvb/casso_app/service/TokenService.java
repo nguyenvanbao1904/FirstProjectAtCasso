@@ -10,7 +10,10 @@ public interface TokenService {
     ExchangeTokenResponse exchangeToken(ExchangeTokenRequest request);
     ExchangeTokenResponse saveToken(ExchangeTokenResponse response);
     String getAccessToken(String id);
-    void deleteAccessToken(String id);
+    void deleteAccessToken(String id, boolean isNeedCallApi);
     GrantTokenResponse saveGrantToken(GrantTokenResponse response);
     GrantTokenResponse getGrantToken(String id);
+    GrantTokenResponse updateGrantToken(GrantTokenRequest token);
+    GrantTokenResponse getGrantId(String id);
+
 }

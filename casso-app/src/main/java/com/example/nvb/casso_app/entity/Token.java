@@ -14,10 +14,12 @@ public class Token {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     String id;
-    @Column(unique = true)
+    @Column(unique = true, columnDefinition = "TEXT")
     String accessToken;
     @Column(unique = true)
     String grantToken;
+    @Column(unique = true)
+    String grantId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "fiservice_id")

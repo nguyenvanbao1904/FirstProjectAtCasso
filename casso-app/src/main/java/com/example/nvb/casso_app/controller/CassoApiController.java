@@ -2,18 +2,19 @@ package com.example.nvb.casso_app.controller;
 
 import com.example.nvb.casso_app.dto.request.CassoWebhookRequest;
 import com.example.nvb.casso_app.dto.response.ApiResponse;
+import com.example.nvb.casso_app.dto.response.GrantTokenResponse;
 import com.example.nvb.casso_app.dto.response.PaymentTransactionResponse;
 import com.example.nvb.casso_app.enums.PaymentTransactionStatus;
 import com.example.nvb.casso_app.mapper.PaymentTransactionMapper;
+import com.example.nvb.casso_app.service.FiServiceService;
 import com.example.nvb.casso_app.service.PaymentService;
+import com.example.nvb.casso_app.service.SseEmitterService;
+import com.example.nvb.casso_app.service.TokenService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -26,6 +27,9 @@ import java.util.regex.Pattern;
 public class CassoApiController {
     PaymentService paymentService;
     PaymentTransactionMapper paymentTransactionMapper;
+    TokenService tokenService;
+    SseEmitterService sseEmitterService;
+    FiServiceService fiServiceService;
 
     @PostMapping("/webhook-qrpay")
     public ApiResponse<Void> handleWebhookQRPay(@RequestBody CassoWebhookRequest payload) {
@@ -48,6 +52,25 @@ public class CassoApiController {
                 .message("Success")
                 .build();
     }
+
+    @PostMapping("/webhook-revoked")
+    public ApiResponse<Void> handleWebhookAddGrant(@RequestBody CassoWebhookRequest payload) {
+        log.info("Received Webhook add grant request: {}", payload);
+        if ("GRANT".equalsIgnoreCase(payload.getWebhookType())) {
+
+            GrantTokenResponse webhookGrantId = tokenService.getGrantId(payload.getGrantId());
+            if(webhookGrantId != null) {
+                tokenService.deleteAccessToken(webhookGrantId.getFiService().getId(), false);
+                sseEmitterService.broadcast("GRANT_REVOKED",
+                        fiServiceService.getFiService(webhookGrantId.getFiService().getId()).getFiFullName());
+            }
+        }
+        return ApiResponse.<Void>builder()
+                .code(0)
+                .message("Success")
+                .build();
+    }
+
     private String extractReference(String description) {
         Pattern p = Pattern.compile("\\.(\\w{9})\\.");
         Matcher m = p.matcher(description);

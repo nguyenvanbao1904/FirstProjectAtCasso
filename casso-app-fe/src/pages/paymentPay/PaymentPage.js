@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchLinkedBanks } from "../../redux/features/linkedBanks/linkedBanksThunks";
 import { selectBanks } from "../../redux/features/linkedBanks/linkedBanksSelector";
@@ -16,6 +16,7 @@ import Alert from "react-bootstrap/Alert";
 import { QRCodeCanvas } from "qrcode.react";
 import { toast } from "react-toastify";
 import BankSelect from "../../components/bankSelect/BankSelect";
+import { filterBanksByQrpay } from "../../utils/bankUtils";
 
 const PaymentPage = () => {
   const dispatch = useDispatch();
@@ -29,6 +30,8 @@ const PaymentPage = () => {
 
   const intervalRef = useRef(null);
 
+  const filteredBanks = useMemo(() => filterBanksByQrpay(banks, true), [banks]);
+
   // Load danh sách ngân hàng
   useEffect(() => {
     dispatch(fetchLinkedBanks());
@@ -41,7 +44,8 @@ const PaymentPage = () => {
     const checkPayment = async () => {
       try {
         const rs = await publicApis.get(
-          `${endpoints.payment.check}/${referenceNumber}`
+          `${endpoints.payment.check}/${referenceNumber}`,
+          { meta: { fiServiceId: selectedBank.id } }
         );
         const status = rs?.data?.data;
 
@@ -82,12 +86,16 @@ const PaymentPage = () => {
       const ref = uuidv4().replace(/-/g, "").slice(0, 9);
       setReferenceNumber(ref);
 
-      const rs = await publicApis.post(endpoints.payment.payment, {
-        fiServiceId: selectedBank.id,
-        amount,
-        description: ref,
-        referenceNumber: ref,
-      });
+      const rs = await publicApis.post(
+        endpoints.payment.payment,
+        {
+          fiServiceId: selectedBank.id,
+          amount,
+          description: ref,
+          referenceNumber: ref,
+        },
+        { meta: { fiServiceId: selectedBank.id } }
+      );
 
       const code = rs?.data?.data?.qrPay?.qrCode;
       if (code) {
@@ -119,7 +127,7 @@ const PaymentPage = () => {
 
             <Form>
               <BankSelect
-                banks={banks}
+                banks={filteredBanks}
                 loading={loading}
                 selectedBank={selectedBank}
                 setSelectedBank={setSelectedBank}

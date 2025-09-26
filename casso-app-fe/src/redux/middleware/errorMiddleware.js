@@ -1,7 +1,7 @@
 import { isRejectedWithValue } from "@reduxjs/toolkit";
 import { toast } from "react-toastify";
 
-export const errorHandlingMiddleware = (store) => (next) => (action) => {
+export const errorHandlingMiddleware = () => (next) => (action) => {
   if (isRejectedWithValue(action)) {
     const errorMessage =
       action.payload?.message ||

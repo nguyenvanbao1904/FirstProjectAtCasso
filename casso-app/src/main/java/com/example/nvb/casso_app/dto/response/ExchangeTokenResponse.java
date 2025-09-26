@@ -10,5 +10,6 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ExchangeTokenResponse {
     String accessToken;
+    String grantId;
     FiServiceResponse.FiServiceItem fiService;
 }
