@@ -53,10 +53,11 @@ public class CassoApiController {
                 .build();
     }
 
-    @PostMapping("/webhook-revoked")
-    public ApiResponse<Void> handleWebhookAddGrant(@RequestBody CassoWebhookRequest payload) {
-        log.info("Received Webhook add grant request: {}", payload);
-        if ("GRANT".equalsIgnoreCase(payload.getWebhookType())) {
+    @PostMapping("/webhook-grant")
+    public ApiResponse<Void> handleWebhookRevokedGrant(@RequestBody CassoWebhookRequest payload) {
+        log.info("Received Webhook for grant request: {}", payload);
+        if ("GRANT".equalsIgnoreCase(payload.getWebhookType())
+                && "USER_PERMISSION_REVOKED".equalsIgnoreCase(payload.getWebhookCode())) {
 
             GrantTokenResponse webhookGrantId = tokenService.getGrantId(payload.getGrantId());
             if(webhookGrantId != null) {

@@ -19,15 +19,15 @@ public class SseEmitterServiceImpl implements SseEmitterService {
     public SseEmitter subscribe(String clientId) {
         SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);
 
-        emitter.onCompletion(() -> {
+        emitter.onCompletion(() -> { //Khi client đóng kết nối
             log.info("SSE completed for clientId={}", clientId);
             emitters.remove(clientId);
         });
-        emitter.onTimeout(() -> {
+        emitter.onTimeout(() -> { //Khi connection hết hạn
             log.warn("SSE timeout for clientId={}", clientId);
             emitters.remove(clientId);
         });
-        emitter.onError(e -> {
+        emitter.onError(e -> { //Khi gặp lỗi (ví dụ network drop)
             log.error("SSE error for clientId={}", clientId, e);
             emitters.remove(clientId);
         });
